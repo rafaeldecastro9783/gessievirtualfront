@@ -13,12 +13,11 @@ export default function Login() {
     e.preventDefault();
     setErro("");
 
-    try {
-      const response = await axios.post("http://localhost:8000/api/token/", {
-        username: email,
-        password: senha,
-      });
-
+   try {
+    const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/token/`, {
+      username: email,
+      password: senha,
+    });
       saveAccessToken(response.data.access);
       navigate("/Agenda");
     } catch (err) {

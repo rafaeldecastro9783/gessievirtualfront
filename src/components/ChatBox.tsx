@@ -26,7 +26,8 @@ export default function ChatBox({ conversa }: Props) {
       if (!conversa) return;
       try {
         const response = await axios.get(
-          `http://localhost:8000/api/mensagens/?conversation=${conversa.id}`,
+          `${import.meta.env.VITE_API_BASE_URL}/mensagens/?conversation=${conversa.id}`
+,
           {
             headers: { Authorization: `Bearer ${getAccessToken()}` },
           }
@@ -49,7 +50,7 @@ export default function ChatBox({ conversa }: Props) {
 
     try {
       await axios.post(
-        "http://localhost:8000/api/mensagens/",
+        `${import.meta.env.VITE_API_BASE_URL}/mensagens/`,
         {
           mensagem: texto,
           enviado_por: "usuario",
@@ -64,7 +65,7 @@ export default function ChatBox({ conversa }: Props) {
       setTexto("");
 
       const res = await axios.get(
-        `http://localhost:8000/api/mensagens/?conversation=${conversa.id}`,
+        `${import.meta.env.VITE_API_BASE_URL}/mensagens/?conversation=${conversa.id}`,
         {
           headers: { Authorization: `Bearer ${getAccessToken()}` },
         }

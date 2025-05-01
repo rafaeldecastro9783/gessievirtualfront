@@ -19,7 +19,7 @@ export default function ModalEditar({ isOpen, onClose, agendamento, onSalvar }: 
 
   useEffect(() => {
     if (isOpen) {
-      axios.get("http://localhost:8000/api/funcionarios/", {
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/funcionarios/`, {
         headers: { Authorization: `Bearer ${getAccessToken()}` }
       }).then(res => setFuncionarios(res.data));
     }

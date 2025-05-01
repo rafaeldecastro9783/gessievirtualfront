@@ -1,4 +1,5 @@
 import axios from "axios";
+import { useEffect } from "react";
 import { getAccessToken } from "../api/auth";
 
 interface Conversa {
@@ -6,29 +7,46 @@ interface Conversa {
   person_nome: string;
   person_telefone: string;
   ultima_mensagem?: string;
-  assumido_por_mim?: boolean;
+  gessie_silenciada?: boolean;
 }
 
 interface Props {
   conversas: Conversa[];
   onSelecionar: (conv: Conversa) => void;
-  onAtualizar: () => void;
+  onAtualizar: (novas : Conversa[]) => void;
 }
 
 export default function ConversasList({ conversas, onSelecionar, onAtualizar }: Props) {
-  const assumirConversa = async (id: number) => {
-    try {
-      await axios.post(`http://localhost:8000/api/conversas/${id}/assumir/`, {}, {
-        headers: { Authorization: `Bearer ${getAccessToken()}` }
-      });
-      onAtualizar(); // recarrega lista
-    } catch (err) {
-      console.error("Erro ao assumir conversa:", err);
-    }
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/conversas/`, {
+          headers: { Authorization: `Bearer ${getAccessToken()}` }
+        });
+        console.log("✅ Conversas atualizadas automaticamente", response.data);
+        onAtualizar(response.data);
+      } catch (error) {
+        console.error("⚠️ Erro ao buscar conversas novas:", error);
+      }
+    }, 1000); // Atualiza a cada 1 segundo
+
+    return () => clearInterval(interval); // Limpa o intervalo no desmontar
+  }, [onAtualizar]);
+
+  const silenciar = async (phone: string, minutos: number) => {
+    await axios.post(`${import.meta.env.VITE_API_BASE_URL}/silenciar-gessie/`, {
+      phone,
+      minutos
+    }, {
+      headers: { Authorization: `Bearer ${getAccessToken()}` }
+    });
+    alert("Gessie silenciada!");
   };
+  
 
   return (
-    <aside style={{ width: "300px", paddingRight: "1rem", borderRight: "1px solid #ddd" }}>
+    <aside style={{ width: "300px", paddingRight: "1rem", borderRight: "1px solid #ddd", overflow: "auto", height: "100vh", scrollBehavior: "smooth"
+    }}>
       <h3 style={{ marginBottom: "1rem", color: "#075e54" }}>💬 Conversas</h3>
 
       {conversas.length === 0 ? (
@@ -45,7 +63,8 @@ export default function ConversasList({ conversas, onSelecionar, onAtualizar }: 
                 borderRadius: "8px",
                 backgroundColor: "#f9f9f9",
                 cursor: "pointer",
-                transition: "background 0.2s ease"
+                transition: "background 0.2s ease",
+                position: "relative"
               }}
             >
               <strong style={{ display: "block", color: "#333" }}>{conv.person_nome}</strong>
@@ -54,13 +73,20 @@ export default function ConversasList({ conversas, onSelecionar, onAtualizar }: 
                 {conv.ultima_mensagem || "Sem mensagens ainda."}
               </em>
 
-              {conv.assumido_por_mim ? (
-                <span style={{ color: "#128C7E", fontWeight: "bold" }}>✅ Comigo</span>
+              {conv.gessie_silenciada ? (
+                <span style={{ 
+                  color: "#128C7E", 
+                  fontWeight: "bold", 
+                  position: "absolute", 
+                  top: "8px", 
+                  right: "8px"
+                }}>
+                  ✅ Gessie silenciada
+                </span>
               ) : (
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    assumirConversa(conv.id);
+                  onClick={(_e) => {
+                    silenciar(conv.person_telefone, 10);
                   }}
                   style={{
                     marginTop: "0.5rem",
@@ -74,7 +100,7 @@ export default function ConversasList({ conversas, onSelecionar, onAtualizar }: 
                     cursor: "pointer"
                   }}
                 >
-                  Assumir
+                🔕 Silenciar Gessie por 5 min
                 </button>
               )}
             </li>

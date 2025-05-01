@@ -21,7 +21,7 @@ export default function Configuracoes() {
   useEffect(() => {
     const fetchConfig = async () => {
       try {
-        const response = await axios.get("http://localhost:8000/api/clientes/", {
+        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/clientes/`, {
           headers: { Authorization: `Bearer ${getAccessToken()}` },
         });
         setConfig(response.data[0]); // pega o primeiro registro (cliente logado)
@@ -40,7 +40,7 @@ export default function Configuracoes() {
   const salvarConfiguracoes = async () => {
     if (!config) return;
     try {
-      await axios.put(`http://localhost:8000/api/clientes/${config.id}/`, config, {
+      await axios.put(`${import.meta.env.VITE_API_BASE_URL}/clientes/${config.id}/`, config, {
         headers: { Authorization: `Bearer ${getAccessToken()}` },
       });
       alert("✅ Configurações salvas com sucesso!");

@@ -23,10 +23,10 @@ export default function NovoAgendamento() {
     const fetchData = async () => {
       try {
         const [resPessoas, resProfissionais] = await Promise.all([
-          axios.get("http://localhost:8000/api/pessoas/", {
+          axios.get(`${import.meta.env.VITE_API_BASE_URL}/pessoas/`, {
             headers: { Authorization: `Bearer ${getAccessToken()}` },
           }),
-          axios.get("http://localhost:8000/api/usuarios/", {
+          axios.get(`${import.meta.env.VITE_API_BASE_URL}/usuarios/`, {
             headers: { Authorization: `Bearer ${getAccessToken()}` },
           }),
         ]);
@@ -43,7 +43,7 @@ export default function NovoAgendamento() {
     if (!personId || !profissionalId || !dataHora) return alert("Preencha todos os campos.");
     try {
       await axios.post(
-        "http://localhost:8000/api/agendamentos/",
+        `${import.meta.env.VITE_API_BASE_URL}/agendamentos/`,
         {
           person: personId,
           client_user: profissionalId,

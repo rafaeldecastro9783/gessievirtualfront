@@ -37,7 +37,7 @@ export default function Agenda() {
 
   const buscarAgendamentos = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/api/agendamentos/", {
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/agendamentos/`, {
         headers: { Authorization: `Bearer ${getAccessToken()}` },
       });
       setAgendamentos(response.data);
@@ -48,7 +48,7 @@ export default function Agenda() {
 
   const buscarPessoas = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/api/pessoas/", {
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/pessoas/`, {
         headers: { Authorization: `Bearer ${getAccessToken()}` },
       });
       setPessoas(response.data);
@@ -59,7 +59,7 @@ export default function Agenda() {
 
   const excluirAgendamento = async (id: number) => {
     try {
-      await axios.delete(`http://localhost:8000/api/agendamentos/${id}/`, {
+      await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/agendamentos/${id}/`, {
         headers: { Authorization: `Bearer ${getAccessToken()}` },
       });
       setDetalhe(null);
@@ -78,7 +78,7 @@ export default function Agenda() {
 
   const criarNovoAgendamento = async () => {
     try {
-      await axios.post("http://localhost:8000/api/agendamentos/", novo, {
+      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/agendamentos/`, novo, {
         headers: { Authorization: `Bearer ${getAccessToken()}` },
       });
       setShowNovoModal(false);
