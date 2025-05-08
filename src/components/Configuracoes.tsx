@@ -20,17 +20,34 @@ interface ConfigData {
 export default function Configuracoes() {
   const [config, setConfig] = useState<ConfigData | null>(null);
 
+  const alterarStatus = async (novoStatus: boolean) => {
+    try {
+      await axios.patch(
+        `${import.meta.env.VITE_API_BASE_URL}/config/${config?.id}/`,
+        { ativo: novoStatus },
+        {
+          headers: { Authorization: `Bearer ${getAccessToken()}` }
+        }
+      );
+      
+      setConfig(prev => prev ? { ...prev, ativo: novoStatus, status: novoStatus ? 'ativo' : 'inativo' } : null);
+    } catch (error) {
+      console.error('Erro ao alterar status:', error);
+    }
+  };
+
+  const fetchConfig = async () => {
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/clientes/`, {
+        headers: { Authorization: `Bearer ${getAccessToken()}` },
+      });
+      setConfig(response.data[0]); // pega o primeiro registro (cliente logado)
+    } catch (error) {
+      console.error('Erro ao buscar configuração:', error);
+    }
+  };
+
   useEffect(() => {
-    const fetchConfig = async () => {
-      try {
-        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/clientes/`, {
-          headers: { Authorization: `Bearer ${getAccessToken()}` },
-        });
-        setConfig(response.data[0]); // pega o primeiro registro (cliente logado)
-      } catch (error) {
-        console.error("Erro ao buscar configurações:", error);
-      }
-    };
     fetchConfig();
   }, []);
 
