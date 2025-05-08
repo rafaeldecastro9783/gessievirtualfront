@@ -13,6 +13,8 @@ interface ConfigData {
   zapi_token: string;
   assistant_id: string;
   prompt_personalizado: string;
+  ativo: boolean;
+  status: string;
 }
 
 export default function Configuracoes() {
@@ -78,8 +80,49 @@ export default function Configuracoes() {
   };
 
   return (
-    <div>
-      <h2 style={{ color: "#075e54", marginBottom: "1.5rem" }}>⚙️ Configurações do Cliente</h2>
+    <div style={{
+      maxWidth: "800px",
+      margin: "0 auto",
+      padding: "2rem",
+      backgroundColor: "#fff",
+      borderRadius: "8px",
+      boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+    }}>
+      <h1 style={{ color: "#128C7E", textAlign: "center", marginBottom: "2rem" }}>
+        Configurações do Cliente
+      </h1>
+
+      {config && (
+        <div style={{ marginBottom: "2rem" }}>
+          <h2 style={{ color: "#128C7E", marginBottom: "1rem" }}>Status do Sistema</h2>
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <div style={{ 
+              padding: "0.5rem 1rem",
+              borderRadius: "4px",
+              backgroundColor: config.status === 'ativo' ? '#E6F4F1' : '#FEE7E2',
+              color: config.status === 'ativo' ? '#128C7E' : '#FF3B30',
+              fontWeight: "bold"
+            }}>
+              {config.status === 'ativo' ? 'Ativo' : 'Inativo'}
+            </div>
+            <button
+              onClick={() => alterarStatus(!config.ativo)}
+              style={{
+                padding: "0.5rem 1.5rem",
+                borderRadius: "4px",
+                border: "none",
+                cursor: "pointer",
+                fontWeight: "bold",
+                backgroundColor: config.ativo ? "#FF3B30" : "#128C7E",
+                color: "white",
+                transition: "background-color 0.2s"
+              }}
+            >
+              {config.ativo ? "Desativar" : "Ativar"}
+            </button>
+          </div>
+        </div>
+      )}
       {!config ? (
         <p>Carregando...</p>
       ) : (

@@ -9,6 +9,8 @@ interface Pessoa {
   idade: string;
   grau_interesse: string;
   ativo: boolean;
+  foto_url?: string;
+  photo?: string;
 }
 
 export default function Pessoas() {
@@ -33,26 +35,48 @@ export default function Pessoas() {
     <div>
       <h2 style={{ color: "#075e54", marginBottom: "1rem" }}>👥 Lista de Pessoas</h2>
       {pessoas.length > 0 ? (
-        <ul style={{ listStyle: "none", padding: 0 }}>
-          {pessoas.map((p) => (
-            <li
-              key={p.id}
-              style={{
-                marginBottom: "1rem",
-                padding: "1rem",
-                borderRadius: "8px",
-                backgroundColor: "#f7f9fa",
-                borderLeft: p.ativo ? "4px solid #128C7E" : "4px solid #999",
-                color: "#333"
-              }}
-            >
-              <strong style={{ display: "block", fontSize: "1.1rem", color: "#111" }}>{p.nome}</strong>
-              <div style={{ fontSize: "0.95rem", color: "#444", marginTop: "0.25rem" }}>
-                📞 {p.telefone} <br />
-                🎂 Idade: {p.idade} <br />
-                🌡️ Interesse: {p.grau_interesse || "não informado"} <br />
-                {p.ativo ? "✅ Ativo" : "❌ Inativo"}
-              </div>
+        <table style={{ borderCollapse: "collapse", width: "100%" }}>
+          <tbody>
+            {pessoas.map((pessoa) => (
+              <tr key={pessoa.id} style={{ backgroundColor: pessoa.ativo ? "#f8f9fa" : "#fff" }}>
+                <td>
+                  <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                    <img
+                      src={pessoa.photo || pessoa.foto_url || 'https://via.placeholder.com/40?text=Sem+foto'}
+                      alt={pessoa.nome}
+                      style={{
+                        width: "40px",
+                        height: "40px",
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                        border: "2px solid #e9ecef"
+                      }}
+                    />
+                    <span>{pessoa.nome}</span>
+                  </div>
+                </td>
+                <td>{pessoa.telefone}</td>
+                <td>{pessoa.idade}</td>
+                <td>{pessoa.grau_interesse}</td>
+                <td>
+                  <button
+                    onClick={() => console.log("Alterar status", pessoa.id, !pessoa.ativo)}
+                    style={{
+                      backgroundColor: pessoa.ativo ? "#dc3545" : "#28a745",
+                      color: "white",
+                      border: "none",
+                      padding: "5px 10px",
+                      borderRadius: "4px",
+                      cursor: "pointer"
+                    }}
+                  >
+                    {pessoa.ativo ? "Desativar" : "Ativar"}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
             </li>
           ))}
         </ul>
