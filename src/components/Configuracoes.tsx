@@ -23,7 +23,7 @@ export default function Configuracoes() {
   const alterarStatus = async (novoStatus: boolean) => {
     try {
       await axios.patch(
-        `${import.meta.env.VITE_API_BASE_URL}/config/${config?.id}/`,
+        `${import.meta.env.VITE_API_BASE_URL}/clientes/${config?.id}/`,
         { ativo: novoStatus },
         {
           headers: { Authorization: `Bearer ${getAccessToken()}` }
