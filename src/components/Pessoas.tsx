@@ -19,10 +19,12 @@ interface Pessoa {
   grau_interesse: string;
   ativo: boolean;
   foto_url?: string;
+  photo_url?: string;
 }
 
 export default function Pessoas() {
   const [pessoas, setPessoas] = useState<Pessoa[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const alterarStatus = async (id: number, novoStatus: boolean) => {
     try {
@@ -33,33 +35,69 @@ export default function Pessoas() {
           headers: { Authorization: `Bearer ${getAccessToken()}` }
         }
       );
-      
-      setPessoas(prev => 
-        prev.map((p: Pessoa) => p.id === id ? { ...p, ativo: novoStatus } : p)
+      setPessoas(prev =>
+        prev.map(p => (p.id === id ? { ...p, ativo: novoStatus } : p))
       );
     } catch (error) {
       console.error('Erro ao alterar status:', error);
     }
   };
 
-  useEffect(() => {
-    const fetchPessoas = async () => {
-      try {
-        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/pessoas/`, {
-          headers: { Authorization: `Bearer ${getAccessToken()}` },
-        });
-        setPessoas(response.data);
-      } catch (error) {
-        console.error('Erro ao buscar pessoas:', error);
-      }
-    };
+  const fetchPessoas = async () => {
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/pessoas/`, {
+        headers: { Authorization: `Bearer ${getAccessToken()}` },
+      });
+      setPessoas(response.data);
+    } catch (error) {
+      console.error('Erro ao buscar pessoas:', error);
+    }
+  };
 
+  const importarContatos = async () => {
+    try {
+      setLoading(true);
+      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/importar-contatos/`, {}, {
+        headers: { Authorization: `Bearer ${getAccessToken()}` }
+      });
+      await fetchPessoas();
+      alert("Contatos importados com sucesso!");
+    } catch (error) {
+      console.error("Erro ao importar contatos:", error);
+      alert("Erro ao importar contatos.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchPessoas();
   }, []);
+
+  const obterImagem = (pessoa: Pessoa): string => {
+    return pessoa.photo_url || pessoa.foto_url || 'https://via.placeholder.com/40?text=Sem+foto';
+  };
 
   return (
     <div>
       <h2 style={{ color: "#075e54", marginBottom: "1rem" }}>👥 Lista de Pessoas</h2>
+
+      <button
+        onClick={importarContatos}
+        disabled={loading}
+        style={{
+          backgroundColor: "#128C7E",
+          color: "white",
+          border: "none",
+          padding: "10px 20px",
+          marginBottom: "1rem",
+          borderRadius: "5px",
+          cursor: loading ? "not-allowed" : "pointer"
+        }}
+      >
+        {loading ? "Importando..." : "📥 Importar Contatos"}
+      </button>
+
       {pessoas.length > 0 ? (
         <table style={{ borderCollapse: "collapse", width: "100%" }}>
           <thead>
@@ -72,12 +110,12 @@ export default function Pessoas() {
             </tr>
           </thead>
           <tbody>
-            {pessoas.map((pessoa: Pessoa) => (
+            {pessoas.map(pessoa => (
               <tr key={pessoa.id} style={{ backgroundColor: pessoa.ativo ? "#f8f9fa" : "#fff" }}>
                 <td>
                   <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
                     <img
-                      src={pessoa.foto_url || 'https://via.placeholder.com/40?text=Sem+foto'}
+                      src={obterImagem(pessoa)}
                       alt={pessoa.nome}
                       style={{
                         width: "40px",
