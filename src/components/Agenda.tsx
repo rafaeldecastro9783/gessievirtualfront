@@ -7,6 +7,7 @@ import { getAccessToken, logout } from "../api/auth";
 import Messages from "./Messages";
 import Pessoas from "./Pessoas";
 import Configuracoes from "./Configuracoes";
+import Profissionais from "./profissionais";
 
 interface Agendamento {
   id: number;
@@ -26,7 +27,7 @@ interface Pessoa {
 
 export default function Agenda() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState<"agenda" | "mensagens" | "pessoas" | "config">("agenda");
+  const [tab, setTab] = useState<"agenda" | "mensagens" | "pessoas" | "profissionais"| "config">("agenda");
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [pessoas, setPessoas] = useState<Pessoa[]>([]);
   const [showNovoModal, setShowNovoModal] = useState(false);
@@ -103,7 +104,7 @@ export default function Agenda() {
     <div style={{ display: "flex", minHeight: "100vh", fontFamily: "Inter, sans-serif", color: "#000" }}>
       <aside style={{ backgroundColor: "#075e54", width: 220, color: "#fff", padding: "2rem 1rem" }}>
         <h2 style={{ textAlign: "center" }}> Gessie Virtual</h2>
-        {["agenda", "mensagens", "pessoas", "config"].map((t) => (
+        {["agenda", "mensagens", "pessoas","profissionais", "config"].map((t) => (
           <button
             key={t}
             onClick={() => setTab(t as any)}
@@ -174,6 +175,7 @@ export default function Agenda() {
 
         {tab === "mensagens" && <Messages />}
         {tab === "pessoas" && <Pessoas />}
+        {tab === "profissionais" && <Profissionais />}
         {tab === "config" && <Configuracoes />}
       </main>
 
