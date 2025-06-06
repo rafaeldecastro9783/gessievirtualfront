@@ -12,7 +12,13 @@ import Profissionais from "./profissionais";
 interface Agendamento {
   id: number;
   data_hora: string;
-  profissional: string;
+  profissional: {
+    id: number;
+    nome: string;
+    email?: string;
+    telefone?: string;
+  } | null;
+  profissional_nome: string; 
   observacoes: string;
   confirmado: boolean;
   person_nome: string;
@@ -75,6 +81,7 @@ export default function Agenda() {
     if (!token) navigate("/");
     buscarAgendamentos();
     buscarPessoas();
+    buscarProfissionais();
   }, [navigate]);
 
   const criarNovoAgendamento = async () => {
@@ -96,9 +103,23 @@ export default function Agenda() {
   const agendamentosFiltrados = agendamentos.filter((ag) => {
     const dataAg = new Date(ag.data_hora);
     const passaData = filtroData ? dataAg.toISOString().split("T")[0] === filtroData : dataAg >= hoje;
-    const passaProf = !filtroProfissional || ag.profissional.toLowerCase().includes(filtroProfissional.toLowerCase());
+    const passaProf = !filtroProfissional || ag.profissional?.nome?.toLowerCase().includes(filtroProfissional.toLowerCase());
     return passaData && passaProf;
   });
+
+  const [profissionais, setProfissionais] = useState<any[]>([]);
+  const [horariosDisponiveis, setHorariosDisponiveis] = useState<string[]>([]);
+  
+  const buscarProfissionais = async () => {
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/funcionarios/`, {
+        headers: { Authorization: `Bearer ${getAccessToken()}` },
+      });
+      setProfissionais(response.data);
+    } catch (error) {
+      console.error("Erro ao buscar profissionais:", error);
+    }
+  };  
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", fontFamily: "Inter, sans-serif", color: "#000" }}>
@@ -162,7 +183,7 @@ export default function Agenda() {
               <ul style={{ listStyle: "none", padding: 0 }}>
                 {agendamentosFiltrados.map((ag) => (
                   <li key={ag.id} onClick={() => setDetalhe(ag)} style={{ marginBottom: "1rem", padding: "1rem", borderRadius: "8px", backgroundColor: "#f7f9fa", borderLeft: "4px solid #128C7E", cursor: "pointer" }}>
-                    <strong>{ag.person_nome}</strong> com <em>{ag.profissional}</em><br />
+                    <strong>{ag.person_nome}</strong> com <em>{ag.profissional_nome || "N/A"}</em><br />
                     <small>{new Date(ag.data_hora).toLocaleString("pt-BR")} — Responsável: {ag.client_user_nome}</small>
                   </li>
                 ))}
@@ -183,15 +204,86 @@ export default function Agenda() {
         <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center" }}>
           <div style={{ backgroundColor: "#fff", padding: "2rem", borderRadius: "12px", width: "90%", maxWidth: "500px", color: "#000" }}>
             <h3 style={{ marginBottom: "1rem" }}>➕ Novo Agendamento</h3>
+
+            {/* Selecionar Pessoa */}
             <select value={novo.person} onChange={(e) => setNovo({ ...novo, person: e.target.value })} style={{ width: "100%", marginBottom: "1rem", padding: "0.5rem", borderRadius: "8px" }}>
               <option value="">Selecione a pessoa</option>
               {pessoas.map(p => (
                 <option key={p.id} value={p.id}>{p.nome}</option>
               ))}
             </select>
-            <input type="datetime-local" value={novo.data_hora} onChange={(e) => setNovo({ ...novo, data_hora: e.target.value })} style={{ width: "100%", marginBottom: "1rem", padding: "0.5rem", borderRadius: "8px" }} />
-            <input type="text" value={novo.profissional} onChange={(e) => setNovo({ ...novo, profissional: e.target.value })} style={{ width: "100%", marginBottom: "1rem", padding: "0.5rem", borderRadius: "8px" }} />
+
+            {/* Selecionar Profissional */}
+            <select
+              value={novo.profissional}
+              onChange={async (e) => {
+                const profissionalId = e.target.value;
+                setNovo({ ...novo, profissional: profissionalId, data_hora: "" });
+
+                // Buscar horários disponíveis da API
+                try {
+                  const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/profissional/${profissionalId}/horarios-disponiveis/`, {
+                    headers: { Authorization: `Bearer ${getAccessToken()}` }
+                  });
+                  const dias = response.data;
+                  const horarios: string[] = [];
+
+                  Object.entries(dias as Record<string, string[]>).forEach(([diaSemana, listaHoras]) => {
+                    listaHoras.forEach((hora: string) => {
+                  
+                      const hoje = new Date();
+                      const data = new Date();
+
+                      // Encontra a próxima data correspondente ao dia da semana
+                      const diasSemana = {
+                        domingo: 0, segunda: 1, terca: 2, terça: 2, quarta: 3,
+                        quinta: 4, sexta: 5, sabado: 6, sábado: 6
+                      };
+
+                      const alvo = diasSemana[diaSemana.toLowerCase() as keyof typeof diasSemana];
+                      const atual = hoje.getDay();
+
+                      const diff = (alvo - atual + 7) % 7;
+                      data.setDate(hoje.getDate() + diff);
+
+                      // Junta com o horário e formata como ISO
+                      const [h, m] = hora.split(":");
+                      data.setHours(parseInt(h), parseInt(m), 0, 0);
+                      horarios.push(data.toISOString());
+                    });
+                  });
+
+                  setHorariosDisponiveis(horarios);
+
+                } catch (err) {
+                  console.error("Erro ao buscar horários:", err);
+                  setHorariosDisponiveis([]);
+                }
+              }}
+              style={{ width: "100%", marginBottom: "1rem", padding: "0.5rem", borderRadius: "8px" }}
+            >
+              <option value="">Selecione o profissional</option>
+              {profissionais.map(p => (
+                <option key={p.id} value={p.id}>{p.nome}</option>
+              ))}
+            </select>
+
+            {/* Selecionar Horário */}
+            <select
+              value={novo.data_hora}
+              onChange={(e) => setNovo({ ...novo, data_hora: e.target.value })}
+              disabled={!horariosDisponiveis.length}
+              style={{ width: "100%", marginBottom: "1rem", padding: "0.5rem", borderRadius: "8px" }}
+            >
+              <option value="">Selecione um horário disponível</option>
+              {horariosDisponiveis.map(h => (
+                <option key={h} value={h}>{new Date(h).toLocaleString("pt-BR")}</option>
+              ))}
+            </select>
+
+            {/* Observações */}
             <textarea value={novo.observacoes} onChange={(e) => setNovo({ ...novo, observacoes: e.target.value })} rows={3} style={{ width: "100%", marginBottom: "1rem", padding: "0.5rem", borderRadius: "8px" }} />
+
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "1rem" }}>
               <button onClick={criarNovoAgendamento} style={{ backgroundColor: "#128C7E", color: "#fff", padding: "0.5rem 1.25rem", borderRadius: "8px", fontWeight: "bold" }}>Salvar</button>
               <button onClick={() => setShowNovoModal(false)} style={{ backgroundColor: "#ccc", padding: "0.5rem 1.25rem", borderRadius: "8px" }}>Cancelar</button>
@@ -204,8 +296,8 @@ export default function Agenda() {
         <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center" }}>
           <div style={{ backgroundColor: "#fff", padding: "2rem", borderRadius: "10px", maxWidth: "500px", width: "90%" }}>
             <h3 style={{ color: "#075e54" }}>📌 Detalhes do Agendamento</h3>
-            <p><strong>Paciente:</strong> {detalhe.person_nome}</p>
-            <p><strong>Profissional:</strong> {detalhe.profissional}</p>
+            <p><strong>Cliente:</strong> {detalhe.person_nome}</p>
+            <p><strong>Profissional:</strong> {detalhe.profissional_nome || "N/A"}</p>
             <p><strong>Data/Hora:</strong> {new Date(detalhe.data_hora).toLocaleString("pt-BR")}</p>
             <p><strong>Responsável:</strong> {detalhe.client_user_nome}</p>
             <p><strong>Confirmado:</strong> {detalhe.confirmado ? "✅ Sim" : "❌ Não"}</p>
